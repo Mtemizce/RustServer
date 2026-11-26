@@ -185,7 +185,11 @@ LAUNCH=(./RustDedicated -batchmode -nographics
   +server.identity "$IDENTITY" +server.ip "$SERVER_IP" +server.port "$GAME_PORT" +server.queryport "$QUERY_PORT"
   +server.level "$(jd .server.level 'Procedural Map')" +server.worldsize "$(jd .server.worldSize 3500)" +server.seed "$SEED"
   +rcon.ip "$RCON_IP" +rcon.port "$RCON_PORT" +rcon.web "$RCON_WEB" +rcon.password "$RCON_PW"
-  +app.port "$APP_PORT" -logfile "$LOG_DIR/server_$IDENTITY.log")
+  +app.port "$APP_PORT")
+# Linux'ta -logfile tum ciktiyi yakalamiyor (Carbon/Unity stdout'a yaziyor);
+# bu yuzden stdout dosyaya tee'lenir. systemd altinda journal'a da duser.
+LOG_FILE="$LOG_DIR/server_$IDENTITY.log"
+RUN_LINE="$(printf '%q ' "${LAUNCH[@]}") 2>&1 | tee -a $(printf %q "$LOG_FILE")"
 
 {
   echo '#!/usr/bin/env bash'
@@ -197,11 +201,12 @@ LAUNCH=(./RustDedicated -batchmode -nographics
   fi
   if [ "$AUTO_RESTART" = "true" ] && [ "$USE_SYSTEMD" -eq 0 ]; then
     echo 'while true; do'
-    echo "  $(printf '%q ' "${LAUNCH[@]}")"
+    echo "  $RUN_LINE"
     echo '  echo "Sunucu kapandi, 10 sn icinde yeniden baslatiliyor... (Ctrl+C ile iptal)"; sleep 10'
     echo 'done'
   else
-    echo "exec $(printf '%q ' "${LAUNCH[@]}")"
+    echo 'set -o pipefail'
+    echo "$RUN_LINE"
   fi
 } > "$BASE/start_server.sh"
 printf '#!/usr/bin/env bash\n# Guncelleme = kurulumu tekrar calistirmak (idempotent).\nexec bash "$(dirname "$0")/install.sh" "$@"\n' > "$BASE/update_server.sh"
@@ -227,6 +232,7 @@ ExecStart=$BASE/start_server.sh
 Restart=$RESTART
 RestartSec=10
 KillSignal=SIGINT
+SuccessExitStatus=130 143 SIGINT SIGTERM
 TimeoutStopSec=120
 LimitNOFILE=100000
 
@@ -255,7 +261,7 @@ if [ "$(jb .runtime.startAfterInstall)" = "true" ]; then
     $SUDO systemctl restart "$SERVICE"
     info "Sunucu baslatildi. Log: journalctl -u $SERVICE -f   |   $LOG_DIR/server_$IDENTITY.log"
   else
-    as_user bash -c "nohup $(printf %q "$BASE/start_server.sh") > $(printf %q "$LOG_DIR/console.log") 2>&1 &"
+    as_user bash -c "nohup $(printf %q "$BASE/start_server.sh") >/dev/null 2>&1 &"
     info "Sunucu arka planda baslatildi. Log: $LOG_DIR/server_$IDENTITY.log"
   fi
 else
