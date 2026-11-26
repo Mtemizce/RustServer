@@ -24,7 +24,9 @@ ok()   { echo "${c_ok}[  OK   ]${c_off} $*"; }
 warn() { echo "${c_warn}[ UYARI ]${c_off} $*"; }
 fail() { echo "${c_err}[ HATA  ]${c_off} $*" >&2; exit 1; }
 
-if [ "$(id -u)" -eq 0 ]; then SUDO=""; else SUDO="sudo"; fi
+# root degilse ve terminal yoksa sudo -n: parola isteyip takilmaz (ajanin yaptigi guncelleme gibi
+# etkilesimsiz calismalarda yalnizca izin verilmis komutlar calisir, gerisi hemen hata verir).
+if [ "$(id -u)" -eq 0 ]; then SUDO=""; elif [ -t 0 ]; then SUDO="sudo"; else SUDO="sudo -n"; fi
 apt_install() {
   export DEBIAN_FRONTEND=noninteractive
   $SUDO apt-get update -qq
@@ -218,7 +220,7 @@ ok "start_server.sh ve update_server.sh olusturuldu."
 SERVICE="ystcore-rust-$IDENTITY"
 if [ "$USE_SYSTEMD" -eq 1 ]; then
   RESTART="no"; [ "$AUTO_RESTART" = "true" ] && RESTART="always"
-  $SUDO tee "/etc/systemd/system/$SERVICE.service" >/dev/null <<EOF
+  UNIT_NEW="$(cat <<EOF
 [Unit]
 Description=YSTCore Rust Server ($IDENTITY)
 After=network-online.target
@@ -239,8 +241,14 @@ LimitNOFILE=100000
 [Install]
 WantedBy=multi-user.target
 EOF
-  $SUDO systemctl daemon-reload
-  $SUDO systemctl enable "$SERVICE" >/dev/null 2>&1
+)"
+  UNIT_FILE="/etc/systemd/system/$SERVICE.service"
+  # Degismediyse dokunma: root olmadan yapilan guncelleme servis dosyasina yazma izni gerektirmez
+  if [ "$(cat "$UNIT_FILE" 2>/dev/null)" != "$UNIT_NEW" ]; then
+    printf '%s\n' "$UNIT_NEW" | $SUDO tee "$UNIT_FILE" >/dev/null
+    $SUDO systemctl daemon-reload
+    $SUDO systemctl enable "$SERVICE" >/dev/null 2>&1
+  fi
   ok "systemd servisi: $SERVICE (acilista otomatik baslar)"
 fi
 
