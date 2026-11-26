@@ -1,0 +1,43 @@
+{
+  "server": {
+    "hostname": "YSTCore Rust Life",
+    "description": "YSTCore Rust Life sunucusuna hos geldiniz!",
+    "url": "",
+    "headerImage": "",
+    "logoImage": "",
+    "tags": "",
+    "identity": "ystcore",
+    "maxPlayers": 50,
+    "level": "Procedural Map",
+    "worldSize": 3500,
+    "seed": 0,
+    "saveInterval": 300,
+    "pve": false
+  },
+  "network": {
+    "ip": "0.0.0.0",
+    "gamePort": 28015,
+    "queryPort": 28017,
+    "appPort": 28082
+  },
+  "rcon": {
+    "password": "",
+    "ip": "127.0.0.1",
+    "port": 28016,
+    "web": true
+  },
+  "mods": {
+    "framework": "none"
+  },
+  "steam": {
+    "branch": "public"
+  },
+  "runtime": {
+    "autoRestart": true,
+    "openFirewall": true,
+    "startAfterInstall": true,
+    "linuxSystemdService": true,
+    "linuxServiceUser": ""
+  },
+  "extraConvars": {}
+}

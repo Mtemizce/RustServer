@@ -1,0 +1,9 @@
+# Kurulum tarafindan uretilen her sey
+steamcmd/
+rustserver/
+logs/
+.kurulum/
+start_server.bat
+update_server.bat
+start_server.sh
+update_server.sh
