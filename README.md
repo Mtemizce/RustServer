@@ -104,3 +104,22 @@ sudo ./install.sh
   - `carbon`'dan `none`'a geçince Carbon'un yükleyicisi devre dışı bırakılır.
 - **RCON güvenliği:** RCON şifreleme kullanmaz (`ws://`). Dışarıya açmak yerine aynı makinedeki bir ajan üzerinden yönetilmesi önerilir.
 - **Steam indirme hataları:** SteamCMD ilk çalıştırmada kendini güncelleyip çıkar (çıkış kodu 7). Steam'in indirme sunucuları da ara sıra zaman aşımı verir. Betik bu durumlarda 5 kez yeniden dener.
+
+## Sürümler ve doğrulama
+
+Kurulum betikleri GitHub **sürümü** olarak yayımlanır (`v1.x`): `install.sh` (Linux), `kurulum.bat` (Windows) ve
+`SHA256SUMS`. YSTCore RustManager uygulaması beklenen sürümü ve her dosyanın sha256 özetini kendi içinde taşır;
+indirilen dosyanın özeti tutmazsa **çalıştırmaz**. Böylece repo ya da sürüm dosyaları değiştirilse bile uygulama
+yalnızca incelenmiş betiği çalıştırır.
+
+Elle kurulumda doğrulama (Linux):
+
+```bash
+curl -fsSLO https://github.com/Mtemizce/RustServer/releases/download/v1.0.0/install.sh
+curl -fsSLO https://github.com/Mtemizce/RustServer/releases/download/v1.0.0/SHA256SUMS
+sha256sum -c --ignore-missing SHA256SUMS
+```
+
+Yeni sürüm: betik değişince yeni etiket (`v1.0.1`...), dosyalar ve `SHA256SUMS` sürüme eklenir; RustManager'daki
+sürüm/özet değerleri bilerek güncellenir (`scripts/rustserver-release.ps1`). Not: Carbon ve Oxide yayıncıları
+sağlama toplamı yayımlamadığı için betikler onları resmi sürüm adresinden indirir, özet doğrulaması yapılamaz.
